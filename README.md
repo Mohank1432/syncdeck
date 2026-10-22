@@ -83,7 +83,7 @@ Designed specifically for home servers (Linux Mint, Ubuntu, Debian, Raspberry Pi
 Ideal for lightweight home servers, SBCs, and Raspberry Pis:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/syncdeck.git
+git clone https://github.com/mohank1432/syncdeck.git
 cd syncdeck
 chmod +x install.sh
 ./install.sh
