@@ -1,4 +1,4 @@
-const CACHE = 'syncdeck-v2';
+const CACHE = 'syncdeck-v3';
 const SHELL = ['/', '/style.css', '/app.js', '/manifest.json', '/icons/icon.svg'];
 
 self.addEventListener('install', e => e.waitUntil(

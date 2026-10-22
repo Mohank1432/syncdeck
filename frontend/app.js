@@ -914,9 +914,9 @@ function drawFileList(role, container) {
       const row = el('div', {
         class: `file-row${isChecked ? ' is-selected' : ''}`,
         onclick: (e) => {
-          // If clicked directly on the directory name, navigate into it
-          if (e.target.classList.contains('is-dir')) return;
-          // Otherwise toggle selection
+          // If clicked directly on the directory name or checkbox, do nothing here (they have their own handlers)
+          if (e.target.classList.contains('is-dir') || e.target.classList.contains('file-checkbox')) return;
+          // Toggle selection when clicking anywhere else on the row
           if (pState.selected.has(item.name)) {
             pState.selected.delete(item.name);
           } else {
@@ -933,7 +933,16 @@ function drawFileList(role, container) {
           class: 'file-checkbox',
           checked: isChecked,
           'aria-label': `Select ${item.name}`,
-          onclick: (e) => e.stopPropagation()
+          onclick: (e) => e.stopPropagation(),
+          onchange: (e) => {
+            if (e.target.checked) {
+              pState.selected.add(item.name);
+            } else {
+              pState.selected.delete(item.name);
+            }
+            row.classList.toggle('is-selected', pState.selected.has(item.name));
+            updateTransferSummary();
+          }
         }),
         el('span', { class: 'file-icon' }, item.is_dir ? '📁' : '📄'),
         el('span', {
