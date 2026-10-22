@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#083e49"/>
+      <stop offset="50%" stop-color="#0b7285"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="cloud-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="arrow-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0b7285"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Background squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Subtle inner border ring -->
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"/>
+  <!-- Cloud with drop shadow -->
+  <g filter="url(#shadow)">
+    <path d="M372 344 H146 C105.13 344 72 310.87 72 270 C72 232.4 99.8 201.2 136.2 196.7 C149.3 148.8 193 114 246 114 C307.3 114 357.7 159.4 366.4 218 C399.7 223.5 424 252.4 424 286 C424 318 398 344 372 344 Z" fill="url(#cloud-grad)"/>
+  </g>
+  <!-- Upward arrow -->
+  <path d="M256 186 L316 246 H280 V320 H232 V246 H196 Z" fill="url(#arrow-grad)"/>
+</svg>

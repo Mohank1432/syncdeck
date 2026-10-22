@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b7285">
+  <title>SyncDeck</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header id="app-header">
+    <div class="header-inner">
+      <span class="app-title">
+        <img src="/icons/icon.svg" class="app-icon" alt="">
+        SyncDeck
+      </span>
+      <button id="theme-toggle" class="btn btn-ghost icon-btn" aria-label="Toggle theme">🌙</button>
+    </div>
+    <!-- Desktop tabs -->
+    <nav id="desktop-tabs" class="tab-bar desktop-only" role="tablist">
+      <button class="tab active" data-tab="transfer">Transfer</button>
+      <button class="tab" data-tab="monitor">Monitor <span id="active-badge" class="badge" hidden></span></button>
+      <button class="tab" data-tab="jobs">Jobs</button>
+      <button class="tab" data-tab="remotes">Remotes</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <!-- Main content -->
+  <main id="app-main">
+    <!-- Transfer panel -->
+    <section id="panel-transfer" class="panel active">
+      <!-- Dual pane browser -->
+      <div class="panes-grid">
+        <div class="pane card" id="pane-src">
+          <div class="pane-header">
+            <span class="pane-title">From</span>
+            <div class="pane-pickers">
+              <select id="src-remote-picker" class="remote-picker" aria-label="Source remote"></select>
+              <select id="src-root-picker" class="root-picker" aria-label="Source local root" hidden></select>
+            </div>
+          </div>
+          <div class="pane-breadcrumb" id="src-breadcrumb"></div>
+          <div class="pane-toolbar">
+            <button class="btn btn-ghost btn-sm" id="src-up" title="Parent folder">↑ Up</button>
+            <button class="btn btn-ghost btn-sm" id="src-all">Select All</button>
+            <button class="btn btn-ghost btn-sm" id="src-refresh" title="Refresh">↺</button>
+          </div>
+          <div class="file-list" id="src-list"></div>
+        </div>
+        <div class="pane card" id="pane-dst">
+          <div class="pane-header">
+            <span class="pane-title">To</span>
+            <div class="pane-pickers">
+              <select id="dst-remote-picker" class="remote-picker" aria-label="Destination remote"></select>
+              <select id="dst-root-picker" class="root-picker" aria-label="Destination local root" hidden></select>
+            </div>
+          </div>
+          <div class="pane-breadcrumb" id="dst-breadcrumb"></div>
+          <div class="pane-toolbar">
+            <button class="btn btn-ghost btn-sm" id="dst-up" title="Parent folder">↑ Up</button>
+            <button class="btn btn-ghost btn-sm" id="dst-mkdir">+ Folder</button>
+            <button class="btn btn-ghost btn-sm" id="dst-refresh" title="Refresh">↺</button>
+          </div>
+          <div class="file-list" id="dst-list"></div>
+        </div>
+      </div>
+      <div class="transfer-bar card">
+        <div class="transfer-options">
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <div class="segmented-control" id="mode-control">
+              <button class="active" data-val="copy">Copy</button>
+              <button data-val="sync">Sync</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Parallel</label>
+            <div class="segmented-control" id="par-control">
+              <button data-val="1">1</button>
+              <button class="active" data-val="2">2</button>
+              <button data-val="4">4</button>
+            </div>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="dry-run"> Dry run
+          </label>
+        </div>
+        <div class="transfer-footer">
+          <span id="transfer-summary" class="ink-2">Nothing selected</span>
+          <button class="btn btn-primary" id="start-transfer" disabled>Start Transfer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Monitor panel -->
+    <section id="panel-monitor" class="panel">
+      <div class="stat-grid card" id="stat-grid"></div>
+      <canvas id="sparkline" height="60" aria-hidden="true"></canvas>
+      <div class="card" id="bwlimit-card">
+        <div class="card-header">Bandwidth Limit <span id="bwnow" class="ink-2"></span></div>
+        <div class="bw-chips" id="bw-chips"></div>
+        <div class="bw-custom">
+          <input type="number" id="bw-val" placeholder="MB/s" min="0.1" step="0.1" class="form-input">
+          <button class="btn" id="bw-set">Set</button>
+          <button class="btn" id="bw-off">No limit</button>
+        </div>
+      </div>
+      <div class="card" id="files-card" hidden>
+        <div class="card-header">Files in progress</div>
+        <div id="files-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          Job Log
+          <button class="btn btn-ghost btn-sm" id="clear-runs">Clear finished</button>
+        </div>
+        <div id="runs-list"></div>
+      </div>
+    </section>
+
+    <!-- Jobs panel -->
+    <section id="panel-jobs" class="panel">
+      <div class="panel-toolbar">
+        <button class="btn btn-primary" id="new-job-btn">+ New Job</button>
+      </div>
+      <div id="jobs-list"></div>
+    </section>
+
+    <!-- Remotes panel -->
+    <section id="panel-remotes" class="panel">
+      <div class="panel-toolbar">
+        <button class="btn btn-primary" id="add-remote-btn">+ Add Remote</button>
+      </div>
+      <div id="remotes-list"></div>
+    </section>
+
+    <!-- Settings panel -->
+    <section id="panel-settings" class="panel">
+      <!-- Local roots -->
+      <div class="card">
+        <div class="card-header">Local Roots</div>
+        <div id="roots-list"></div>
+        <div class="card-footer">
+          <input type="text" id="new-root-path" placeholder="/mnt/media" class="form-input" style="flex:2;min-width:180px">
+          <input type="text" id="new-root-label" placeholder="Label (optional)" class="form-input" style="flex:1;min-width:140px">
+          <button class="btn btn-primary" id="add-root-btn">Add Root</button>
+        </div>
+      </div>
+      <!-- Notifications -->
+      <div class="card">
+        <div class="card-header">Notifications</div>
+        <div class="settings-form" id="notifications-form"></div>
+      </div>
+      <!-- App settings -->
+      <div class="card">
+        <div class="card-header">App</div>
+        <div class="settings-form" id="app-settings-form"></div>
+      </div>
+      <!-- System -->
+      <div class="card">
+        <div class="card-header">System</div>
+        <div class="pad" style="display:flex;flex-direction:column;gap:8px;">
+          <p id="rclone-version" class="ink-2 mono"></p>
+          <p class="ink-2" style="font-size:0.875rem">rclone updates itself daily at ~04:30 with automatic rollback.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile bottom tab bar -->
+  <nav id="mobile-tabs" class="tab-bar mobile-only" role="tablist">
+    <button class="tab active" data-tab="transfer">
+      <span class="tab-icon">⇅</span>
+      <span class="tab-label">Transfer</span>
+    </button>
+    <button class="tab" data-tab="monitor">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Monitor</span>
+      <span id="mobile-badge" class="badge" hidden></span>
+    </button>
+    <button class="tab" data-tab="jobs">
+      <span class="tab-icon">📋</span>
+      <span class="tab-label">Jobs</span>
+    </button>
+    <button class="tab" data-tab="remotes">
+      <span class="tab-icon">☁</span>
+      <span class="tab-label">Remotes</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <span class="tab-icon">⚙</span>
+      <span class="tab-label">Settings</span>
+    </button>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast" role="alert" aria-live="polite"></div>
+
+  <!-- Modal overlay -->
+  <div id="modal-overlay" hidden>
+    <div id="modal-box" class="card modal-box" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <span id="modal-title"></span>
+        <button id="modal-close" class="btn btn-ghost icon-btn" aria-label="Close dialog">✕</button>
+      </div>
+      <div id="modal-body"></div>
+      <div id="modal-footer" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

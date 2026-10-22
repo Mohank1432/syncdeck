@@ -1,0 +1,19 @@
+[Unit]
+Description=SyncDeck web UI
+After=network-online.target syncdeck-rcd.service
+Wants=network-online.target syncdeck-rcd.service
+
+[Service]
+User=__USER__
+WorkingDirectory=__DIR__
+EnvironmentFile=__DIR__/.env
+Environment=BIND=__BIND__
+Environment=PORT=__PORT__
+ExecStart=__UVICORN__ backend.app:app --host __BIND__ --port __PORT__
+Restart=always
+RestartSec=5
+# Keep memory reasonable
+MemoryMax=150M
+
+[Install]
+WantedBy=multi-user.target

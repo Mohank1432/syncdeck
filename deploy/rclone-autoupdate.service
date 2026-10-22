@@ -1,0 +1,6 @@
+[Unit]
+Description=Update rclone and restart the daemon when idle
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rclone-autoupdate.sh

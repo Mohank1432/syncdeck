@@ -1,0 +1,19 @@
+{
+  "name": "SyncDeck",
+  "short_name": "SyncDeck",
+  "description": "Modern homeserver transfer dashboard for rclone and cloud storage",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1117",
+  "theme_color": "#0b7285",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities"]
+}

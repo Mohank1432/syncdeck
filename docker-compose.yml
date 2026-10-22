@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  rclone-rcd:
+    image: rclone/rclone:latest
+    container_name: syncdeck-rcd
+    restart: unless-stopped
+    command: >
+      rcd
+      --rc-addr=0.0.0.0:5572
+      --rc-no-auth
+      --rc-job-expire-duration=24h
+      --rc-job-expire-interval=1h
+    volumes:
+      - rclone-config:/config/rclone
+    networks:
+      - syncdeck-internal
+    # rclone RC is NOT exposed to host — only app can reach it
+
+  syncdeck:
+    build: .
+    container_name: syncdeck
+    restart: unless-stopped
+    depends_on:
+      - rclone-rcd
+    ports:
+      - "${PORT:-8768}:8768"
+    environment:
+      - RC_URL=http://rclone-rcd:5572
+      - BIND=0.0.0.0
+      - PORT=8768
+      - DB_PATH=/data/syncdeck.db
+      - ALLOWED_ROOTS=${ALLOWED_ROOTS:-/mnt}
+    volumes:
+      - syncdeck-data:/data
+      - ${MEDIA_ROOT:-/mnt}:/mnt:ro  # read-only local media mount
+      - rclone-config:/config/rclone:ro
+    networks:
+      - syncdeck-internal
+    # Bind to specific host interface if desired:
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+volumes:
+  syncdeck-data:
+  rclone-config:
+
+networks:
+  syncdeck-internal:
+    driver: bridge
+    internal: true  # rclone RC unreachable from outside Docker network

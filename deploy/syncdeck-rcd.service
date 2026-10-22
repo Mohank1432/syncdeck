@@ -1,0 +1,13 @@
+[Unit]
+Description=rclone RC daemon for SyncDeck (localhost only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+ExecStart=__RCLONE__ rcd --rc-addr 127.0.0.1:5572 --rc-no-auth --rc-job-expire-duration 24h --rc-job-expire-interval 1h
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
