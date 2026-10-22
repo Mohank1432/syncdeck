@@ -3,6 +3,9 @@ services:
     image: rclone/rclone:latest
     container_name: syncdeck-rcd
     restart: unless-stopped
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     command: >
       rcd
       --rc-addr=0.0.0.0:5572
@@ -13,9 +16,8 @@ services:
       - rclone-config:/config/rclone
       - ${MEDIA_ROOT:-/mnt}:/mnt
     networks:
-      - syncdeck-internal
-      - syncdeck-egress
-    # rclone RC is NOT exposed to host — only reached by syncdeck on internal network
+      - syncdeck-net
+    # Port 5572 is NOT published to host — only reachable inside Docker by syncdeck
 
   syncdeck:
     build: .
@@ -23,6 +25,9 @@ services:
     restart: unless-stopped
     depends_on:
       - syncdeck-rcd
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     ports:
       - "${HOST_BIND:-127.0.0.1}:${HOST_PORT:-8780}:8768"
     environment:
@@ -36,18 +41,12 @@ services:
       - ${MEDIA_ROOT:-/mnt}:/mnt:ro  # read-only browsing
       - rclone-config:/config/rclone:ro
     networks:
-      - syncdeck-internal
-      - syncdeck-frontend
+      - syncdeck-net
 
 volumes:
   syncdeck-data:
   rclone-config:
 
 networks:
-  syncdeck-internal:
+  syncdeck-net:
     driver: bridge
-    internal: true  # isolates RC communication between app and daemon
-  syncdeck-egress:
-    driver: bridge  # gives syncdeck-rcd outbound internet access to cloud APIs (Drime, Drive, S3)
-  syncdeck-frontend:
-    driver: bridge  # enables host port publishing
