@@ -62,7 +62,7 @@ Designed specifically for home servers (Linux Mint, Ubuntu, Debian, Raspberry Pi
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/syncdeck.git
+   git clone https://github.com/mohank1432/syncdeck.git
    cd syncdeck
    ```
 2. Create your environment configuration:
