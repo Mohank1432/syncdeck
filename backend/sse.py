@@ -62,24 +62,26 @@ async def _broadcast(event: str, data: dict) -> None:
 
 async def stats_loop() -> None:
     """
-    Background loop: every 2 s, fetch rclone stats, update DB run statuses,
-    and broadcast events to SSE subscribers.
+    Background loop:
+    - If subscribers or active jobs exist: poll rclone stats & active run statuses.
+    - If idle (no clients connected, no jobs running): poll less aggressively to avoid log/CPU noise.
     """
     global _last_active_count
     keepalive_tick = 0
 
     while True:
+        has_subscribers = len(_subscribers) > 0
+        sleep_interval = 2 if has_subscribers else 4
+
         try:
-            await asyncio.sleep(2)
+            await asyncio.sleep(sleep_interval)
         except asyncio.CancelledError:
             break
 
         keepalive_tick += 1
 
         try:
-            stats = await rc("core/stats")
-            bwlimit = await rc("core/bwlimit")
-
+            active = []
             async with aiosqlite.connect(settings.db_path) as db:
                 db.row_factory = aiosqlite.Row
 
@@ -109,21 +111,24 @@ async def stats_loop() -> None:
                         if updated:
                             await _broadcast("run_update", dict(updated))
 
-                # Count still-active after updates
                 async with db.execute("SELECT COUNT(*) FROM runs WHERE status='running'") as cur:
                     (active_count,) = await cur.fetchone()
 
-            await _broadcast("stats", {
-                **stats,
-                "bwlimit": bwlimit,
-                "active_runs": active_count,
-            })
+            # Only fetch and broadcast global stats if someone is actually listening
+            if has_subscribers:
+                stats = await rc("core/stats")
+                bwlimit = await rc("core/bwlimit")
+                await _broadcast("stats", {
+                    **stats,
+                    "bwlimit": bwlimit,
+                    "active_runs": active_count,
+                })
 
         except Exception as exc:
             log.debug("SSE loop error: %s", exc)
 
-        # Send keepalive comment every ~15 s (7–8 ticks × 2 s)
-        if keepalive_tick % 8 == 0:
+        # Send keepalive comment every ~15 s
+        if has_subscribers and keepalive_tick % 7 == 0:
             for q in list(_subscribers):
                 try:
                     q.put_nowait({"event": "keepalive", "data": "{}"})

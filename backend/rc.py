@@ -21,7 +21,7 @@ async def rc(cmd: str, **params) -> dict:
     try:
         r = await _client.post(f"{settings.rc_url}/{cmd}", json=params, timeout=60.0)
     except httpx.RequestError as exc:
-        raise RcloneError(f"rclone daemon is not reachable: {exc}") from exc
+        raise RcloneError(f"[{cmd}] rclone daemon is not reachable at {settings.rc_url}: {exc}") from exc
 
     try:
         data = r.json()
@@ -30,6 +30,6 @@ async def rc(cmd: str, **params) -> dict:
 
     if r.status_code != 200:
         raw = data.get("error") or f"rclone HTTP {r.status_code}"
-        raise RcloneError(friendly(raw))
+        raise RcloneError(friendly(raw, cmd=cmd))
 
     return data

@@ -3,8 +3,9 @@
 set -e
 
 APP_DIR="${APP_DIR:-$HOME/Apps/syncdeck}"
-BIND="${BIND:-0.0.0.0}"
-PORT="${PORT:-8768}"
+BIND="${BIND:-127.0.0.1}"
+PORT="${PORT:-8780}"
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Prerequisites ─────────────────────────────────────────────────────────────
 echo "==> Checking prerequisites..."
@@ -13,20 +14,28 @@ command -v rclone >/dev/null 2>&1 || {
   curl https://rclone.org/install.sh | sudo bash
 }
 
-command -v pip3 >/dev/null 2>&1 || sudo apt-get install -y python3-pip
+command -v python3 >/dev/null 2>&1 || sudo apt-get install -y python3
+python3 -m venv --help >/dev/null 2>&1 || sudo apt-get install -y python3-venv python3-pip
 
 # ── Install files ─────────────────────────────────────────────────────────────
-echo "==> Installing to $APP_DIR..."
-mkdir -p "$APP_DIR"
-cp -r backend/ frontend/ deploy/ "$APP_DIR/"
-cp requirements.txt "$APP_DIR/"
-[ -f .env ] && cp .env "$APP_DIR/" || cp .env.example "$APP_DIR/.env"
+if [ "$SRC_DIR" != "$APP_DIR" ]; then
+  echo "==> Installing to $APP_DIR..."
+  mkdir -p "$APP_DIR"
+  cp -r "$SRC_DIR/backend" "$SRC_DIR/frontend" "$SRC_DIR/deploy" "$APP_DIR/"
+  cp "$SRC_DIR/requirements.txt" "$APP_DIR/"
+  [ -f "$SRC_DIR/.env" ] && cp "$SRC_DIR/.env" "$APP_DIR/" || cp "$SRC_DIR/.env.example" "$APP_DIR/.env"
+else
+  echo "==> Running in-place in $APP_DIR..."
+  [ -f "$APP_DIR/.env" ] || cp "$APP_DIR/.env.example" "$APP_DIR/.env"
+fi
 
-# Install Python requirements
-pip3 install --user -r "$APP_DIR/requirements.txt"
+# ── Python Virtualenv ─────────────────────────────────────────────────────────
+echo "==> Setting up Python virtual environment..."
+python3 -m venv "$APP_DIR/venv"
+"$APP_DIR/venv/bin/pip" install --upgrade pip
+"$APP_DIR/venv/bin/pip" install -r "$APP_DIR/requirements.txt"
 
-PYTHON=$(command -v python3)
-UVICORN=$(python3 -m site --user-base)/bin/uvicorn
+UVICORN="$APP_DIR/venv/bin/uvicorn"
 
 # ── Systemd services ──────────────────────────────────────────────────────────
 echo "==> Installing systemd services..."

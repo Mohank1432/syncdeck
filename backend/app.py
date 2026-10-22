@@ -23,6 +23,8 @@ from .sse import stats_loop
 from .routers import remotes, browse, transfers, jobs, status, settings as settings_router
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s  %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 log = logging.getLogger("syncdeck")
 
 
